@@ -1,0 +1,301 @@
+/* Stats Bar */
+.dt-stats-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.dt-stat {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 18px;
+    cursor: default;
+}
+
+.dt-stat-icon.green {
+    color: var(--accent-green);
+}
+
+.dt-stat-icon.purple {
+    color: var(--accent-purple);
+}
+
+.dt-stat-icon.orange {
+    color: var(--accent-orange);
+}
+
+.dt-stat-val {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: block;
+}
+
+.dt-stat-lbl {
+    font-size: 0.72rem;
+    color: var(--text-secondary);
+}
+
+/* Layout */
+.dt-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 20px;
+}
+
+/* Main Task List */
+.dt-main {
+    padding: 24px;
+    cursor: default;
+}
+
+.dt-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.dt-filter-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-full);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: 'Inter', sans-serif;
+}
+
+.dt-filter-btn:hover {
+    border-color: var(--accent-purple);
+    color: var(--text-primary);
+}
+
+.dt-filter-btn.active {
+    background: rgba(124, 77, 255, 0.15);
+    border-color: var(--accent-purple);
+    color: var(--accent-purple);
+}
+
+.dt-task-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.dt-task-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.dt-task-item:hover {
+    border-color: var(--border-glass-hover);
+}
+
+.dt-task-item.completed {
+    opacity: 0.5;
+}
+
+.dt-task-item.completed .dt-task-title {
+    text-decoration: line-through;
+    color: var(--text-muted);
+}
+
+.dt-task-check {
+    flex-shrink: 0;
+}
+
+.dt-task-icon {
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.dt-task-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.dt-task-title {
+    display: block;
+    font-size: 0.88rem;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.dt-task-cat {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.dt-task-xp {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--accent-purple);
+    padding: 4px 10px;
+    background: rgba(124, 77, 255, 0.1);
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+}
+
+.dt-task-xp.earned {
+    background: rgba(105, 240, 174, 0.1);
+    color: var(--accent-green);
+}
+
+/* Sidebar */
+.dt-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.dt-week {
+    padding: 20px;
+    cursor: default;
+}
+
+.dt-week h3 {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.dt-week-grid {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.dt-week-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+}
+
+.dt-day-label {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.dt-day-bar-bg {
+    width: 100%;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: var(--radius-sm);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+}
+
+.dt-day-bar-fill {
+    width: 100%;
+    border-radius: var(--radius-sm);
+    min-height: 3px;
+}
+
+.dt-day-count {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+}
+
+/* Streak Card */
+.dt-streak-card {
+    padding: 20px;
+    cursor: default;
+}
+
+.dt-streak-card h3 {
+    font-size: 0.9rem;
+    font-weight: 700;
+    margin-bottom: 14px;
+}
+
+.dt-milestones {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+}
+
+.milestone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 6px;
+    border-radius: var(--radius-md);
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    flex: 1;
+    opacity: 0.4;
+}
+
+.milestone span {
+    font-family: 'Orbitron', monospace;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.milestone small {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+}
+
+.milestone.achieved {
+    opacity: 1;
+    border-color: var(--accent-green);
+    background: rgba(105, 240, 174, 0.08);
+}
+
+.milestone.achieved span {
+    color: var(--accent-green);
+}
+
+.milestone.current {
+    opacity: 1;
+    border-color: var(--accent-purple);
+    background: rgba(124, 77, 255, 0.08);
+    animation: borderGlow 3s ease-in-out infinite;
+}
+
+.milestone.current span {
+    color: var(--accent-purple);
+}
+
+@media (max-width: 1024px) {
+    .dt-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .dt-stats-bar {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .dt-stats-bar {
+        grid-template-columns: 1fr;
+    }
+}

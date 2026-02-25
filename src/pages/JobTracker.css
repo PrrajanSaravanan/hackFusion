@@ -1,0 +1,228 @@
+/* Stats */
+.jt-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.jt-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 16px 18px;
+    cursor: default;
+}
+
+.jt-stat-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.jt-stat-count {
+    font-family: 'Orbitron', monospace;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.jt-stat-label {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+}
+
+/* Kanban */
+.jt-kanban {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.jt-column {
+    min-height: 200px;
+}
+
+.jt-column-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.jt-col-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+.jt-column-header h3 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    flex: 1;
+}
+
+.jt-col-count {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    padding: 2px 8px;
+    background: var(--bg-glass);
+    border-radius: var(--radius-full);
+}
+
+.jt-column-content {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.jt-job-card {
+    padding: 14px;
+    cursor: default;
+}
+
+.jt-job-logo {
+    font-size: 1.3rem;
+    margin-bottom: 6px;
+}
+
+.jt-job-card h4 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    margin-bottom: 3px;
+}
+
+.jt-job-card p {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+}
+
+.jt-job-date {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+/* Follow-up */
+.jt-followup {
+    padding: 24px;
+    cursor: default;
+}
+
+.jt-followup-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.jt-ai-icon {
+    color: var(--accent-purple);
+}
+
+.jt-followup-header h3 {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.jt-followup-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.jt-followup-item {
+    padding: 14px 16px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-md);
+}
+
+.jt-fu-company {
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--accent-blue);
+    display: block;
+    margin-bottom: 4px;
+}
+
+.jt-followup-item p {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Modal */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+}
+
+.modal-content {
+    width: 100%;
+    max-width: 450px;
+    padding: 0;
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border-glass);
+}
+
+.modal-header h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.modal-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding: 16px 24px;
+    border-top: 1px solid var(--border-glass);
+}
+
+@media (max-width: 1024px) {
+    .jt-kanban {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .jt-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .jt-kanban {
+        grid-template-columns: 1fr;
+    }
+
+    .jt-stats {
+        grid-template-columns: 1fr;
+    }
+}

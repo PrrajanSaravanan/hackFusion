@@ -1,0 +1,180 @@
+.signup-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+    padding: 20px;
+}
+
+/* Background Effects */
+.signup-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+.bg-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.3;
+}
+
+.bg-orb-1 {
+    width: 400px;
+    height: 400px;
+    background: var(--accent-purple);
+    top: -100px;
+    left: -100px;
+    animation: float 8s ease-in-out infinite;
+}
+
+.bg-orb-2 {
+    width: 350px;
+    height: 350px;
+    background: var(--accent-blue);
+    bottom: -50px;
+    right: -100px;
+    animation: float 10s ease-in-out infinite reverse;
+}
+
+.bg-orb-3 {
+    width: 250px;
+    height: 250px;
+    background: var(--accent-cyan);
+    top: 50%;
+    left: 60%;
+    animation: float 12s ease-in-out infinite;
+}
+
+.bg-grid {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+}
+
+/* Container */
+.signup-container {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Logo */
+.signup-logo {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.logo-badge {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-lg);
+    background: var(--gradient-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    margin: 0 auto 12px;
+    box-shadow: var(--shadow-glow-purple);
+}
+
+.signup-logo h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 2.2rem;
+    color: var(--text-primary);
+}
+
+.signup-tagline {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    margin-top: 4px;
+}
+
+/* Card */
+.signup-card {
+    width: 100%;
+    padding: 32px;
+}
+
+.card-header {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.header-icon {
+    color: var(--accent-purple);
+    margin-bottom: 8px;
+}
+
+.card-header h2 {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.card-header p {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.signup-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.signup-card label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.signup-btn {
+    width: 100%;
+    margin-top: 8px;
+}
+
+.signup-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.signup-footer a {
+    color: var(--accent-purple);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.signup-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Step Indicator */
+.signup-container .step-indicator {
+    margin-top: 32px;
+    margin-bottom: 8px;
+}
+
+.step-label {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-align: center;
+}
