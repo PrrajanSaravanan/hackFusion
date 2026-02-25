@@ -1,11 +1,32 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
+import multer from 'multer';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const pdf = require('pdf-parse');
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const app = express();
 const PORT = 3001;
 
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
+
+// ─── Multer config for PDF uploads (max 10 MB) ───
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (file.mimetype === 'application/pdf') cb(null, true);
+    else cb(new Error('Only PDF files are accepted'));
+  },
+});
+
+// ─── Gemini AI Model ───
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
+const geminiModel = genAI.getGenerativeModel({ model: GEMINI_MODELS[0] });
 
 // ─── LeetCode GraphQL Queries ───
 
@@ -669,7 +690,122 @@ app.get('/api/github/:username', async (req, res) => {
   }
 });
 
+// ════════════════════════════════════════════════════
+// ─── Resume Analysis Route (Gemini AI) ───
+// ════════════════════════════════════════════════════
 
+const RESUME_ANALYSIS_PROMPT = `You are an expert ATS (Applicant Tracking System) resume analyzer and career advisor.
+
+Analyze the following resume text and return a JSON object with EXACTLY this structure (no markdown, no code fences, just raw JSON):
+
+{
+  "atsScore": <number 0-100, overall ATS compatibility score>,
+  "sections": [
+    { "name": "Contact Information", "score": <0-100>, "feedback": "<1-2 sentence feedback>" },
+    { "name": "Education", "score": <0-100>, "feedback": "<1-2 sentence feedback>" },
+    { "name": "Experience", "score": <0-100>, "feedback": "<1-2 sentence feedback>" },
+    { "name": "Projects", "score": <0-100>, "feedback": "<1-2 sentence feedback>" },
+    { "name": "Skills", "score": <0-100>, "feedback": "<1-2 sentence feedback>" },
+    { "name": "Format & Structure", "score": <0-100>, "feedback": "<1-2 sentence feedback>" }
+  ],
+  "roleLikelihood": [
+    { "role": "<job role>", "score": <0-100> }
+  ],
+  "improvements": [
+    { "priority": "high"|"medium"|"low", "text": "<actionable suggestion>" }
+  ],
+  "keywords": {
+    "present": ["<keyword found in resume>", ...],
+    "missing": ["<important keyword missing>", ...]
+  },
+  "summary": "<3-5 sentence overall analysis summary with specific advice>"
+}
+
+Rules:
+- "sections" must have exactly 6 entries with those exact names.
+- "roleLikelihood" should have 5 entries, sorted by score descending.
+- "improvements" should have 5-7 entries with a mix of high/medium/low priorities.
+- "keywords.present" should list 5-8 technical keywords found in the resume.
+- "keywords.missing" should list 5-8 important keywords missing from the resume that ATS systems commonly look for.
+- The "summary" should be personalized, mentioning specific details from the resume.
+- Be honest and constructive in scoring. Do not inflate scores.
+- Return ONLY the JSON object, nothing else.
+
+RESUME TEXT:
+`;
+
+app.post('/api/resume/analyze', upload.single('file'), async (req, res) => {
+  try {
+    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
+      return res.status(500).json({ error: 'Gemini API key not configured. Add your key to server/.env' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No PDF file uploaded' });
+    }
+
+    // Extract text from PDF
+    const pdfData = await pdf(req.file.buffer);
+    const resumeText = pdfData.text?.trim();
+
+    if (!resumeText || resumeText.length < 50) {
+      return res.status(400).json({ error: 'Could not extract enough text from the PDF. Ensure it is not scanned/image-based.' });
+    }
+
+    console.log(`📄 Resume received: ${req.file.originalname} (${resumeText.length} chars extracted)`);
+
+    // Call Gemini
+    const prompt = RESUME_ANALYSIS_PROMPT + resumeText;
+    const result = await geminiModel.generateContent(prompt);
+    const responseText = result.response.text();
+
+    // Parse JSON from Gemini response (strip markdown fences if present)
+    let cleaned = responseText.trim();
+    if (cleaned.startsWith('```')) {
+      cleaned = cleaned.replace(/^```(?:json)?\s*/, '').replace(/```\s*$/, '').trim();
+    }
+
+    let analysis;
+    try {
+      analysis = JSON.parse(cleaned);
+    } catch (parseErr) {
+      console.error('Failed to parse Gemini response:', cleaned.substring(0, 200));
+      return res.status(500).json({ error: 'AI returned invalid response format. Please try again.' });
+    }
+
+    // Validate required fields exist
+    const required = ['atsScore', 'sections', 'roleLikelihood', 'improvements', 'keywords', 'summary'];
+    for (const field of required) {
+      if (!(field in analysis)) {
+        return res.status(500).json({ error: `AI response missing field: ${field}. Please try again.` });
+      }
+    }
+
+    console.log(`✅ Resume analyzed: ATS Score = ${analysis.atsScore}`);
+    res.json(analysis);
+  } catch (err) {
+    console.error('Resume analysis error:', err.message);
+
+    if (err.message?.includes('Only PDF')) {
+      return res.status(400).json({ error: err.message });
+    }
+
+    res.status(500).json({ error: err.message || 'Failed to analyze resume' });
+  }
+});
+
+// Multer error handler (file too large, wrong type)
+app.use((err, _req, res, _next) => {
+  if (err instanceof multer.MulterError) {
+    if (err.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({ error: 'File too large. Maximum size is 10 MB.' });
+    }
+    return res.status(400).json({ error: err.message });
+  }
+  if (err) {
+    return res.status(400).json({ error: err.message });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`🚀 Ready360 Server running on http://localhost:${PORT}`);

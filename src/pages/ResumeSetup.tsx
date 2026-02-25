@@ -1,29 +1,35 @@
 import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, ArrowRight, ArrowLeft, Target } from 'lucide-react';
+import { FileText, ArrowRight, ArrowLeft, Target, AlertTriangle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
-import { mockResume } from '../data/mockData';
+import { analyzeResume, type ResumeData } from '../services/resumeService';
 import './OnboardingPage.css';
 
 export default function ResumeSetup() {
     const navigate = useNavigate();
     const fileRef = useRef<HTMLInputElement>(null);
-    const [uploaded, setUploaded] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [showAnalysis, setShowAnalysis] = useState(false);
+    const [error, setError] = useState('');
     const [fileName, setFileName] = useState('');
+    const [data, setData] = useState<ResumeData | null>(null);
 
-    const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            setFileName(file.name);
-            setUploaded(true);
-            setLoading(true);
-            setTimeout(() => {
-                setLoading(false);
-                setShowAnalysis(true);
-            }, 2500);
+        if (!file) return;
+
+        setFileName(file.name);
+        setLoading(true);
+        setError('');
+        setData(null);
+
+        try {
+            const result = await analyzeResume(file);
+            setData(result);
+        } catch (err: any) {
+            setError(err.message || 'Failed to analyze resume');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -31,11 +37,13 @@ export default function ResumeSetup() {
         navigate('/dashboard');
     };
 
-    const sectionData = mockResume.sections.map(s => ({
-        name: s.name.split(' ')[0],
-        score: s.score,
-        fill: s.score >= 80 ? '#69f0ae' : s.score >= 60 ? '#ffab40' : '#ff5252',
-    }));
+    const sectionData = data
+        ? data.sections.map(s => ({
+            name: s.name.split(' ')[0],
+            score: s.score,
+            fill: s.score >= 80 ? '#69f0ae' : s.score >= 60 ? '#ffab40' : '#ff5252',
+        }))
+        : [];
 
     return (
         <div className="onboarding-page">
@@ -67,35 +75,63 @@ export default function ResumeSetup() {
                 </motion.div>
 
                 {/* Upload Zone */}
-                {!showAnalysis && !loading && (
+                {!data && !loading && (
                     <motion.div
-                        className={`upload-zone ${uploaded ? 'uploaded' : ''}`}
+                        className="upload-zone"
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
                         onClick={() => fileRef.current?.click()}
                     >
                         <input ref={fileRef} type="file" accept=".pdf" onChange={handleUpload} />
-                        <div className="upload-icon">{uploaded ? '✅' : '📄'}</div>
-                        <h3>{uploaded ? fileName : 'Drop your resume here'}</h3>
-                        <p>{uploaded ? 'File uploaded! Analyzing...' : 'PDF format recommended • Click or drag to upload'}</p>
+                        <div className="upload-icon">📄</div>
+                        <h3>Drop your resume here</h3>
+                        <p>PDF format recommended • Click or drag to upload</p>
                     </motion.div>
                 )}
+
+                {/* Error State */}
+                <AnimatePresence>
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                            style={{
+                                background: 'rgba(255,82,82,0.12)',
+                                border: '1px solid rgba(255,82,82,0.3)',
+                                borderRadius: '12px',
+                                padding: '12px 16px',
+                                color: '#ff5252',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                marginBottom: '16px',
+                            }}
+                        >
+                            <AlertTriangle size={18} />
+                            <span>{error}</span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 {/* Loading */}
                 <AnimatePresence>
                     {loading && (
                         <motion.div className="loading-state" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                             <div className="loading-spinner-lg" />
-                            <p>Analyzing your resume...</p>
+                            <p>Analyzing your resume with AI...</p>
                             <p className="loading-sub">Checking ATS compatibility, section quality, and keyword optimization</p>
+                            <p className="loading-sub" style={{ fontSize: '12px', opacity: 0.6, marginTop: '8px' }}>
+                                {fileName}
+                            </p>
                         </motion.div>
                     )}
                 </AnimatePresence>
 
                 {/* Analysis */}
                 <AnimatePresence>
-                    {showAnalysis && (
+                    {data && (
                         <motion.div className="stats-container" initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
                             {/* ATS Score Gauge */}
                             <motion.div className="chart-card glass-card" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
@@ -110,7 +146,7 @@ export default function ResumeSetup() {
                                                 strokeLinecap="round"
                                                 strokeDasharray={`${2 * Math.PI * 78}`}
                                                 initial={{ strokeDashoffset: 2 * Math.PI * 78 }}
-                                                animate={{ strokeDashoffset: 2 * Math.PI * 78 * (1 - mockResume.atsScore / 100) }}
+                                                animate={{ strokeDashoffset: 2 * Math.PI * 78 * (1 - data.atsScore / 100) }}
                                                 transition={{ delay: 0.3, duration: 1.5, ease: 'easeOut' }}
                                             />
                                             <defs>
@@ -122,7 +158,7 @@ export default function ResumeSetup() {
                                             </defs>
                                         </svg>
                                         <div className="ats-gauge-value">
-                                            <span className="score">{mockResume.atsScore}</span>
+                                            <span className="score">{data.atsScore}</span>
                                             <span className="label">ATS Score</span>
                                         </div>
                                     </div>
@@ -131,7 +167,7 @@ export default function ResumeSetup() {
 
                             {/* Section Scores */}
                             <div className="section-scores">
-                                {mockResume.sections.map((section, i) => (
+                                {data.sections.map((section, i) => (
                                     <motion.div
                                         key={section.name}
                                         className="section-score-card glass-card"
@@ -172,7 +208,7 @@ export default function ResumeSetup() {
                             <motion.div className="chart-card glass-card full-width" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}>
                                 <h3><Target size={16} /> Role Likelihood</h3>
                                 <div className="topic-bars" style={{ marginTop: 12 }}>
-                                    {mockResume.roleLikelihood.map((role, i) => (
+                                    {data.roleLikelihood.map((role, i) => (
                                         <div key={role.role} className="topic-row">
                                             <span className="topic-name" style={{ width: 170 }}>{role.role}</span>
                                             <div className="topic-bar-wrapper">
@@ -201,7 +237,7 @@ export default function ResumeSetup() {
                                     <h3>Improvement Suggestions</h3>
                                 </div>
                                 <div className="improvements-list">
-                                    {mockResume.improvements.map((item, i) => (
+                                    {data.improvements.map((item, i) => (
                                         <div key={i} className="improvement-item">
                                             <span className={`improvement-priority ${item.priority}`}>{item.priority}</span>
                                             <p>{item.text}</p>
@@ -213,13 +249,13 @@ export default function ResumeSetup() {
                                 <div className="keywords-section" style={{ marginTop: 24 }}>
                                     <h4 style={{ color: 'var(--accent-green)', marginBottom: 8 }}>✓ Keywords Found</h4>
                                     <div className="keyword-tags">
-                                        {mockResume.keywords.present.map(k => (
+                                        {data.keywords.present.map(k => (
                                             <span key={k} className="tag tag-green">{k}</span>
                                         ))}
                                     </div>
                                     <h4 style={{ color: 'var(--accent-red)', marginBottom: 8, marginTop: 12 }}>✗ Missing Keywords</h4>
                                     <div className="keyword-tags">
-                                        {mockResume.keywords.missing.map(k => (
+                                        {data.keywords.missing.map(k => (
                                             <span key={k} className="tag tag-red">{k}</span>
                                         ))}
                                     </div>
@@ -232,7 +268,7 @@ export default function ResumeSetup() {
                                     <div className="summary-icon">🧠</div>
                                     <h3>AI Analysis Summary</h3>
                                 </div>
-                                <p className="summary-text">{mockResume.summary}</p>
+                                <p className="summary-text">{data.summary}</p>
                             </motion.div>
 
                             {/* Navigation */}
