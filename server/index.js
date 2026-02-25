@@ -5,7 +5,11 @@ import multer from 'multer';
 import { createRequire } from 'module';
 const require = createRequire(import.meta.url);
 const pdf = require('pdf-parse');
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// OpenRouter config
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
+const OPENROUTER_URL = process.env.OPENROUTER_URL || "https://openrouter.ai/api/v1/chat/completions";
+const OPENROUTER_MODEL = process.env.OPENROUTER_MODEL || "meta-llama/llama-3-8b-instruct";
+
 
 const app = express();
 const PORT = 3001;
@@ -23,10 +27,8 @@ const upload = multer({
   },
 });
 
-// ─── Gemini AI Model ───
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
-const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-2.0-flash'];
-const geminiModel = genAI.getGenerativeModel({ model: GEMINI_MODELS[0] });
+// OpenRouter initialization handled via fetch in the route
+
 
 // ─── LeetCode GraphQL Queries ───
 
@@ -691,7 +693,8 @@ app.get('/api/github/:username', async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════
-// ─── Resume Analysis Route (Gemini AI) ───
+// ─── Resume Analysis Route (OpenRouter AI) ───
+
 // ════════════════════════════════════════════════════
 
 const RESUME_ANALYSIS_PROMPT = `You are an expert ATS (Applicant Tracking System) resume analyzer and career advisor.
@@ -736,8 +739,8 @@ RESUME TEXT:
 
 app.post('/api/resume/analyze', upload.single('file'), async (req, res) => {
   try {
-    if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
-      return res.status(500).json({ error: 'Gemini API key not configured. Add your key to server/.env' });
+    if (!OPENROUTER_API_KEY) {
+      return res.status(500).json({ error: 'OpenRouter API key not configured. Add your key to server/.env' });
     }
 
     if (!req.file) {
@@ -754,12 +757,40 @@ app.post('/api/resume/analyze', upload.single('file'), async (req, res) => {
 
     console.log(`📄 Resume received: ${req.file.originalname} (${resumeText.length} chars extracted)`);
 
-    // Call Gemini
-    const prompt = RESUME_ANALYSIS_PROMPT + resumeText;
-    const result = await geminiModel.generateContent(prompt);
-    const responseText = result.response.text();
+    // Call OpenRouter
+    const response = await fetch(OPENROUTER_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
+        'Content-Type': 'application/json',
+        'HTTP-Referer': 'http://localhost:5173', // Optional, for OpenRouter rankings
+        'X-Title': 'HackFusion', // Optional
+      },
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        messages: [
+          {
+            role: 'user',
+            content: `${RESUME_ANALYSIS_PROMPT}\n\nRESUME TEXT:\n${resumeText}`
+          }
+        ],
+        response_format: { type: 'json_object' } // Request JSON if supported
+      }),
+    });
 
-    // Parse JSON from Gemini response (strip markdown fences if present)
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(`OpenRouter API error: ${errorData.error?.message || response.statusText}`);
+    }
+
+    const data = await response.json();
+    const responseText = data.choices[0]?.message?.content;
+
+    if (!responseText) {
+      throw new Error('AI returned an empty response');
+    }
+
+    // Parse JSON from response
     let cleaned = responseText.trim();
     if (cleaned.startsWith('```')) {
       cleaned = cleaned.replace(/^```(?:json)?\s*/, '').replace(/```\s*$/, '').trim();
@@ -769,7 +800,7 @@ app.post('/api/resume/analyze', upload.single('file'), async (req, res) => {
     try {
       analysis = JSON.parse(cleaned);
     } catch (parseErr) {
-      console.error('Failed to parse Gemini response:', cleaned.substring(0, 200));
+      console.error('Failed to parse OpenRouter response:', cleaned.substring(0, 200));
       return res.status(500).json({ error: 'AI returned invalid response format. Please try again.' });
     }
 
@@ -785,14 +816,10 @@ app.post('/api/resume/analyze', upload.single('file'), async (req, res) => {
     res.json(analysis);
   } catch (err) {
     console.error('Resume analysis error:', err.message);
-
-    if (err.message?.includes('Only PDF')) {
-      return res.status(400).json({ error: err.message });
-    }
-
     res.status(500).json({ error: err.message || 'Failed to analyze resume' });
   }
 });
+
 
 // Multer error handler (file too large, wrong type)
 app.use((err, _req, res, _next) => {

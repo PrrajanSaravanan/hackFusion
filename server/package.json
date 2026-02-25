@@ -3,8 +3,8 @@
     "version": "1.0.0",
     "type": "module",
     "scripts": {
-        "start": "node index.js",
-        "dev": "node --watch index.js"
+        "start": "python app.py",
+        "dev": "python app.py"
     },
     "dependencies": {
         "@google/generative-ai": "^0.24.1",
