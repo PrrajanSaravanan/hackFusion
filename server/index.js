@@ -397,7 +397,6 @@ const GITHUB_API = 'https://api.github.com';
 
 async function queryGitHub(path) {
   const url = `${GITHUB_API}${path}`;
-  console.log(`GitHub Request: ${url}`);
   try {
     const res = await fetch(url, {
       headers: {
@@ -418,7 +417,6 @@ async function queryGitHub(path) {
 
     return res.json();
   } catch (err) {
-    console.error(`GitHub Fetch Failed for ${url}:`, err.message);
     throw err;
   }
 }
@@ -671,15 +669,7 @@ app.get('/api/github/:username', async (req, res) => {
   }
 });
 
-app.get('/test-fetch', async (req, res) => {
-  try {
-    const response = await fetch('https://api.github.com/zen');
-    const text = await response.text();
-    res.send(`Fetch to GitHub Zen: ${text}`);
-  } catch (err) {
-    res.status(500).send(`Fetch to GitHub Failed: ${err.message}`);
-  }
-});
+
 
 app.listen(PORT, () => {
   console.log(`🚀 Ready360 Server running on http://localhost:${PORT}`);
