@@ -13,7 +13,11 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 
 import pypdf
-import easyocr
+try:
+    import easyocr
+    EASYOCR_AVAILABLE = True
+except ImportError:
+    EASYOCR_AVAILABLE = False
 
 # Load environment variables
 load_dotenv()
@@ -24,7 +28,7 @@ OPENROUTER_MODEL = os.getenv('OPENROUTER_MODEL', 'meta-llama/llama-3-8b-instruct
 
 app = Flask(__name__)
 PORT = 3001
-CORS(app, origins=["http://localhost:5173"])
+CORS(app, origins=["http://localhost:5173", "http://localhost:5174"])
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -689,6 +693,8 @@ def analyze_resume():
                     resume_text += text + "\n"
         else:
             # Extract text using EasyOCR
+            if not EASYOCR_AVAILABLE:
+                return jsonify({'error': 'EasyOCR not installed. Please upload a PDF file instead.'}), 400
             if 'ocr_reader' not in globals() or globals()['ocr_reader'] is None:
                 globals()['ocr_reader'] = easyocr.Reader(['en'], gpu=False)
             results = globals()['ocr_reader'].readtext(file_bytes)
